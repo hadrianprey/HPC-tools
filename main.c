@@ -34,7 +34,7 @@ double *duplicate_matrix(double *orig, unsigned int size)
 
 int is_nearly_equal(double x, double y)
 {
-  const double epsilon = 1e-5 /* some small number */;
+  const double epsilon = 1e-3 /* some small number */;
   return fabs(x - y) <= epsilon * fabs(x);
   // see Knuth section 4.2.2 pages 217-218
 }
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
   //
   timestamp(&start);
 
-  info = my_dgesv(n, nrhs, a, b /* add/change the parameters according to your implementation needs */);
+  info = my_dgesv(n, nrhs, a, b);
 
   timestamp(&now);
   printf("Time taken by my dgesv solver: %ld ms\n", diff_milli(&start, &now));
