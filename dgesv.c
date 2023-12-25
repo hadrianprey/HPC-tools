@@ -3,8 +3,6 @@ int N = 8;
 
 int my_dgesv(int n, int nrhs, double *a, double *b)
 {
-    double* ax = (double*) __builtin_assume_aligned(a, N);
-    double* bx = (double*) __builtin_assume_aligned(b, N);
     int i, j, k;
 
     for (k = 0; k < n; k++) {
@@ -16,41 +14,45 @@ int my_dgesv(int n, int nrhs, double *a, double *b)
         }
 
         // Escalamos la fila k para que el pivote sea igual a 1
-        #pragma omp simd aligned(a:N)
+        #pragma vector always
+        #pragma loop count (n)
         for (j = k; j < n; j++) {
-            ax[k * n + j] /= pivot;
+            a[k * n + j] /= pivot;
         }
 
         // Escalamos el lado derecho del sistema
-        #pragma omp simd aligned(b:N)
+        #pragma vector always
+        #pragma loop count (nrhs)
         for (j = 0; j < nrhs; j++) {
-            bx[k * nrhs + j] /= pivot;
+            b[k * nrhs + j] /= pivot;
         }
 
         // Eliminación gaussiana para hacer ceros por debajo del pivote
         for (i = k + 1; i < n; i++) {
-            double factor = ax[i * n + k];
+            double factor = a[i * n + k];
 
             // Actualizamos la fila i restando el múltiplo del pivote
-            #pragma omp simd aligned(a:N)
+            #pragma vector always
+            #pragma loop count (n)
             for (j = k; j < n; j++) {
-                ax[i * n + j] -= factor * ax[k * n + j];
+                a[i * n + j] -= factor * a[k * n + j];
             }
 
             // Actualizamos el lado derecho del sistema
-            #pragma omp simd aligned(b:N)
+            #pragma vector always
+            #pragma loop count (nrhs)
             for (j = 0; j < nrhs; j++) {
-                bx[i * nrhs + j] -= factor * bx[k * nrhs + j];
+                b[i * nrhs + j] -= factor * b[k * nrhs + j];
             }
         }
     }
 
     // Sustitución hacia atrás para encontrar la solución
     for (i = n - 2; i >= 0; i--) {
+        #pragma loop count (N)
         for (j = i + 1; j < n; j++) {
-            #pragma omp simd aligned(b:N)
             for (k = 0; k < nrhs; k++) {
-                bx[i * nrhs + k] -= a[i * n + j] * bx[j * nrhs + k];
+                b[i * nrhs + k] -= a[i * n + j] * b[j * nrhs + k];
             }
         }
     }
