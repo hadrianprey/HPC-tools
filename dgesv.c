@@ -31,7 +31,7 @@ int my_dgesv(int n, int nrhs, double *restrict a, double *restrict b)
             double factor = a[i * n + k];
 
             // Actualizamos la fila i restando el múltiplo del pivote
-            #pragma omp simd
+            #pragma omp simd code_aling(8)
             for (j = k; j < n; j++) {
             double tmp = a[i * n + j] - factor * a[k * n + j];
             a[i * n + j] = tmp;
